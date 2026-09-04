@@ -1,0 +1,35 @@
+{
+  "_note": "内置矿权公示样例(真实源全部失败时的兜底,演示用)。",
+  "items": [
+    {
+      "title": "新疆皮山县库尔良铜矿勘查探矿权挂牌出让公告",
+      "channel": "探矿权出让公告",
+      "date": "2026-09",
+      "url": "https://ky.mnr.gov.cn/kyqcrgg/tkq/"
+    },
+    {
+      "title": "山东省乳山市金青顶外围金矿普查探矿权挂牌出让结果公示",
+      "channel": "探矿权出让结果",
+      "date": "2026-09",
+      "url": "https://ky.mnr.gov.cn/jggs/jjgs/"
+    },
+    {
+      "title": "湖北省大冶市铜山口外围铜多金属矿勘查网上挂牌出让公告",
+      "channel": "探矿权出让公告",
+      "date": "2026-09",
+      "url": "https://ky.mnr.gov.cn/kyqcrgg/tkq/"
+    },
+    {
+      "title": "广东省翁源县周陂镇光明地区地热田地热采矿权出让公告",
+      "channel": "采矿权出让公告",
+      "date": "2026-09",
+      "url": "https://ky.mnr.gov.cn/kyqcrgg/ckq/"
+    },
+    {
+      "title": "内蒙古自治区巴林右旗巴彦琥硕银矿勘查探矿权挂牌出让公告",
+      "channel": "探矿权出让公告",
+      "date": "2026-09",
+      "url": "https://ky.mnr.gov.cn/kyqcrgg/tkq/"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "_note": "内置样例新闻(断网/全部真实源失败时的兜底)。内容为演示用,发布于 2026-08 至 2026-09。",
+  "items": [
+    {
+      "title": "Pilbara Minerals 二季度锂精矿产量创纪录,继续扩产 Pilgangoora 项目",
+      "summary": "澳大利亚 Pilbara Minerals 公布二季度运营数据,Pilgangoora 项目锂精矿产量环比增长 12%,公司维持全年产量指引不变。",
+      "media": "样例-矿业周刊",
+      "url": "https://example.com/news/pilgangoora-q2-output",
+      "published": "2026-09-02"
+    },
+    {
+      "title": "雅化集团与 Pilbara Minerals 包销协议履约顺利,锂精矿到港量稳定",
+      "summary": "国内锂盐企业雅化集团披露,其与 Pilbara Minerals 签订的锂精矿包销协议执行顺利,年内到港量符合计划,原料自给率持续提升。",
+      "media": "样例-证券日报",
+      "url": "https://example.com/news/yahua-pilbara-offtake",
+      "published": "2026-08-28"
+    },
+    {
+      "title": "碳酸锂期货价格连续三周回升,锂矿股普遍走强",
+      "summary": "广期所碳酸锂主力合约站稳 15 万元/吨关口,市场对下半年储能与动力电池需求预期改善,Pilbara 相关概念股跟涨。",
+      "media": "样例-上海证券报",
+      "url": "https://example.com/news/lithium-carbonate-rally",
+      "published": "2026-08-25"
+    },
+    {
+      "title": "Wodgina 锂矿重启第三条产线,Mineral Resources 上调西澳锂精矿产量目标",
+      "summary": "Mineral Resources 宣布 Wodgina 项目第三条产线完成改造重启,Pilbara 地区锂精矿整体供给继续爬坡。",
+      "media": "样例-中国矿业报",
+      "url": "https://example.com/news/wodgina-line3-restart",
+      "published": "2026-08-20"
+    },
+    {
+      "title": "Pilbara 地区新探矿权挂牌出让,锂矿资源争夺热度不减",
+      "summary": "西澳矿产部门公布 Pilbara 地区新一轮勘探许可,多家矿业公司参与竞标,市场关注锂资源战略储备价值。",
+      "media": "样例-资源周刊",
+      "url": "https://example.com/news/pilbara-tenements-auction",
+      "published": "2026-08-15"
+    },
+    {
+      "title": "机构调研:全球锂精矿供需或于下半年趋于紧平衡,关注澳矿成本曲线",
+      "summary": "多家机构报告指出,非洲与南美新增供给低于预期,西澳硬岩锂矿成本优势凸显,Pilbara 地区项目利润率有望改善。",
+      "media": "样例-财联社",
+      "url": "https://example.com/news/lithium-balance-2026h2",
+      "published": "2026-08-10"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "_note": "内置 NI 43-101/JORC 储量样例数据(演示兜底用,数值取自公司公开年报的近似值,请以官方报告为准)。",
+  "projects": {
+    "pilgangoora": {
+      "name": "Pilgangoora 锂钽矿",
+      "company": "Pilbara Minerals(澳交所 ASX: PLS)",
+      "location": "西澳大利亚 Pilbara 地区",
+      "commodity": "锂(Li₂O)",
+      "standard": "JORC 2012",
+      "categories": {
+        "Measured": {"tonnage_mt": 82.0, "grade": "1.15% Li2O"},
+        "Indicated": {"tonnage_mt": 332.9, "grade": "1.15% Li2O"},
+        "Inferred": {"tonnage_mt": 63.7, "grade": "1.03% Li2O"}
+      },
+      "reserve_note": "另有矿石储量(Proved+Probable)约 1.15 亿吨 @ 1.12% Li2O",
+      "report_year": "2024",
+      "source_url": "https://pilbaraminerals.com.au/investors/annual-reports/"
+    },
+    "wodgina": {
+      "name": "Wodgina 锂矿",
+      "company": "Mineral Resources(澳交所 ASX: MIN)",
+      "location": "西澳大利亚 Pilbara 地区",
+      "commodity": "锂(Li₂O)",
+      "standard": "JORC 2012",
+      "categories": {
+        "Measured": {"tonnage_mt": 31.4, "grade": "1.08% Li2O"},
+        "Indicated": {"tonnage_mt": 227.8, "grade": "1.18% Li2O"},
+        "Inferred": {"tonnage_mt": 24.2, "grade": "1.15% Li2O"}
+      },
+      "report_year": "2024",
+      "source_url": "https://www.mineralresources.com.au/investors-media/asx-announcements/"
+    },
+    "kathleen_valley": {
+      "name": "Kathleen Valley 锂矿",
+      "company": "Liontown Resources(澳交所 ASX: LTR)",
+      "location": "西澳大利亚",
+      "commodity": "锂(Li₂O)",
+      "standard": "JORC 2012",
+      "categories": {
+        "Measured": {"tonnage_mt": 18.5, "grade": "1.36% Li2O"},
+        "Indicated": {"tonnage_mt": 138.0, "grade": "1.41% Li2O"},
+        "Inferred": {"tonnage_mt": 18.9, "grade": "1.30% Li2O"}
+      },
+      "report_year": "2024",
+      "source_url": "https://www.ltresources.com.au/investors/reports/"
+    },
+    "greenbushes": {
+      "name": "Greenbushes 锂矿",
+      "company": "Talison Lithium(天齐锂业/IGO/雅保合资)",
+      "location": "西澳大利亚",
+      "commodity": "锂(Li₂O)",
+      "standard": "JORC 2012",
+      "categories": {
+        "Measured": {"tonnage_mt": 194.0, "grade": "1.50% Li2O"},
+        "Indicated": {"tonnage_mt": 167.0, "grade": "1.50% Li2O"},
+        "Inferred": {"tonnage_mt": 40.0, "grade": "1.40% Li2O"}
+      },
+      "report_year": "2024",
+      "source_url": "https://www.talisonlithium.com/"
+    }
+  }
+}

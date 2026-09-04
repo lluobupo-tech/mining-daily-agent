@@ -1,0 +1,66 @@
+# 矿权日报 Agent —— 一条命令容器化运行(交付要求)
+#
+#   方式一(零依赖验证,不需要 LLM key):  docker compose up --build agent
+#   方式二(完整 LLM 模式):              先复制 .env.example 为 .env 填 key,再 docker compose up --build agent
+#
+# 说明:3+1 个 MCP server 以 HTTP 模式跑在容器网络内,agent 通过 MCP_HTTP_URLS 连接;
+# 简报输出挂载到宿主机 ./output 目录。
+# 注:项目目录含中文,Compose 无法自动推导项目名,故显式声明 name。
+name: mining-daily-agent
+
+services:
+  news:
+    build: .
+    command: ["python", "-m", "servers.news_server"]
+    environment:
+      MCP_SERVER_PORT: "8101"
+    ports:
+      - "8101:8101"
+
+  pdf:
+    build: .
+    command: ["python", "-m", "servers.pdf_server"]
+    environment:
+      MCP_SERVER_PORT: "8102"
+    ports:
+      - "8102:8102"
+
+  price:
+    build: .
+    command: ["python", "-m", "servers.price_server"]
+    environment:
+      MCP_SERVER_PORT: "8103"
+    ports:
+      - "8103:8103"
+
+  rights:
+    build: .
+    command: ["python", "-m", "servers.rights_server"]
+    environment:
+      MCP_SERVER_PORT: "8104"
+    ports:
+      - "8104:8104"
+
+  agent:
+    build: .
+    command:
+      - "python"
+      - "-m"
+      - "agent.main"
+      - "--query"
+      - "给我生成一份关于 Pilbara 锂矿的今日简报"
+      - "--mode"
+      - "${AGENT_MODE:-template}"   # 无 key 默认模板模式;有 key 改 llm
+    environment:
+      MCP_TRANSPORT: "http"
+      MCP_HTTP_URLS: "http://news:8101/mcp,http://pdf:8102/mcp,http://price:8103/mcp,http://rights:8104/mcp"
+      DEEPSEEK_API_KEY: "${DEEPSEEK_API_KEY:-}"
+      DEEPSEEK_BASE_URL: "${DEEPSEEK_BASE_URL:-https://api.deepseek.com}"
+      DEEPSEEK_MODEL: "${DEEPSEEK_MODEL:-deepseek-chat}"
+    depends_on:
+      - news
+      - pdf
+      - price
+      - rights
+    volumes:
+      - ./output:/app/output

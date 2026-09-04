@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "mining-news-mcp": {
+      "command": "{{PYTHON_PATH}}",
+      "args": ["-m", "servers.news_server"],
+      "cwd": "{{PROJECT_ROOT}}"
+    },
+    "mineral-pdf-mcp": {
+      "command": "{{PYTHON_PATH}}",
+      "args": ["-m", "servers.pdf_server"],
+      "cwd": "{{PROJECT_ROOT}}"
+    },
+    "lme-price-mcp": {
+      "command": "{{PYTHON_PATH}}",
+      "args": ["-m", "servers.price_server"],
+      "cwd": "{{PROJECT_ROOT}}"
+    },
+    "mining-rights-mcp": {
+      "command": "{{PYTHON_PATH}}",
+      "args": ["-m", "servers.rights_server"],
+      "cwd": "{{PROJECT_ROOT}}"
+    }
+  }
+}

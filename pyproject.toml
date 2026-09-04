@@ -1,0 +1,19 @@
+[project]
+name = "mining-daily-agent"
+version = "0.1.0"
+description = "矿权日报 Agent:4 个 MCP server + LangGraph Agent 编排"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=2.0",
+    "langgraph>=0.2.60",
+    "langchain-core>=0.3",
+    "langchain-openai>=0.2",
+    "pypdf>=5.0",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.uv]
+package = false
