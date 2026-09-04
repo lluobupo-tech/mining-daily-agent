@@ -1,4 +1,4 @@
-# 矿权日报 Agent(24h 面试项目)
+# 矿权日报 Agent
 
 按 MCP(Model Context Protocol)协议实现的矿业情报系统:**4 个 MCP server + 1 个 LangGraph Agent**。
 输入一句话(如"给我生成一份关于 Pilbara 锂矿的今日简报"),输出 Markdown 简报:
