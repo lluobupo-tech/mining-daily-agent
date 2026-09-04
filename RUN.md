@@ -1,4 +1,4 @@
-# RUN.md —— 5 分钟跑起来(面试官专用)
+# RUN.md —— 5 分钟跑起来
 
 > 目标:拿到本项目后 5 分钟内,① 看到 Agent 生成 Markdown 简报;② 把 4 个 MCP server 接入 Claude Desktop / Cursor 并成功调用。
 
@@ -6,7 +6,7 @@
 
 - Python 3.10+(建议装有 [uv](https://docs.astral.sh/uv/),非必需)
 - Claude Desktop 或 Cursor(二选一,仅"方式二"需要)
-- **无需申请任何 API Key**:三个新闻/价格/矿权数据源全部免费
+- **无需申请任何 API Key**:各数据源(新闻/价格/矿权公示)全部免费
 - DeepSeek key 可选:LLM 模式需要;无 key 自动走模板模式,功能完整
 
 ---
@@ -105,7 +105,7 @@ python scripts/gen_mcp_config.py    # 生成 mcp-config.local.json,路径已填�
 ## 方式三:Docker 一条命令(可选,2 分钟)
 
 ```bash
-# 模板模式(不需要任何 key,面试官零配置验证):
+# 模板模式(不需要任何 key,零配置验证):
 docker compose up --build agent
 
 # LLM 模式:先 cp .env.example .env 并填入 DeepSeek key,再:

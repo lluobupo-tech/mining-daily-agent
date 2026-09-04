@@ -23,5 +23,5 @@ output/*.md
 .vscode/
 .idea/
 
-# 公司面试材料(不入库)
-面试题目.docx
+# 本地文档(不入库)
+*.docx

@@ -1,4 +1,4 @@
-# 矿权日报 Agent —— 一条命令容器化运行(交付要求)
+# 矿权日报 Agent —— 一条命令容器化运行
 #
 #   方式一(零依赖验证,不需要 LLM key):  docker compose up --build agent
 #   方式二(完整 LLM 模式):              先复制 .env.example 为 .env 填 key,再 docker compose up --build agent
