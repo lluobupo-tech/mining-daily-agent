@@ -99,6 +99,7 @@ streamable HTTP(docker 容器网络),由环境变量 `MCP_SERVER_TRANSPORT` 切�
 ## 验收用例
 
 ```bash
+# 启用 LLM 模式前先配置 key:复制 .env.example 为 .env,填入 DEEPSEEK_API_KEY(platform.deepseek.com 获取)
 uv run python -m agent.main --query "给我生成一份关于 Pilbara 锂矿的今日简报"   # LLM 模式(需 key)
 AGENT_MODE=template uv run python -m agent.main --query "给我生成一份关于 Pilbara 锂矿的今日简报"  # 模板模式(零依赖)
 uv run pytest tests/ -v                                                                                 # 冒烟测试

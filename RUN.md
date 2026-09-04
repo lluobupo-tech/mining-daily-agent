@@ -22,7 +22,13 @@ uv sync
 #    没有 uv 则用 pip:
 #    pip install -r requirements.txt
 
-# 3. 运行 Agent(交互菜单:回车即生成 Pilbara 锂矿简报)
+# 3. (可选,启用 LLM 模式需要)配置 DeepSeek API Key:
+#    Windows:  copy .env.example .env
+#    macOS/Linux:  cp .env.example .env
+#    然后用编辑器打开 .env,把 DEEPSEEK_API_KEY=sk-xxx 改成你自己的 key
+#    (不配 key 也能用:自动走模板模式,简报功能完整;key 获取: platform.deepseek.com)
+
+# 4. 运行 Agent(交互菜单:回车即生成 Pilbara 锂矿简报)
 uv run python -m agent.main
 #    或直接一条命令(pip 用户把 uv run 去掉即可):
 uv run python -m agent.main --query "给我生成一份关于 Pilbara 锂矿的今日简报"
@@ -32,8 +38,8 @@ uv run python -m agent.main --query "给我生成一份关于 Pilbara 锂矿的�
 `✅ 简报已生成: ...\output\简报-YYYYMMDD-HHMMSS.md`,打开即见四块内容
 (新闻摘要 / 储量数据 / 价格走势 / 风险提示)+ 引用源清单。
 
-> 模式说明:`AGENT_MODE=auto`(默认,LLM 失败自动降级模板)/ `llm` / `template`;
-> 也可 `--mode` 参数指定。DeepSeek key 在 `.env`(参考 `.env.example`)。
+> 模式说明:`AGENT_MODE=auto`(默认,LLM 失败自动降级模板)/ `llm` / `template`,
+> 也可 `--mode` 参数指定。key 只保存在项目内 `.env`(已 gitignore,不会随代码公开)。
 
 ---
 
