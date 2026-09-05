@@ -91,6 +91,8 @@ def _llm_extract(text: str) -> tuple[dict, str]:
         api_key=DEEPSEEK_API_KEY,
         temperature=0,
         request_timeout=60,
+        # JSON 输出模式:从协议层保证返回纯 JSON,取代脆弱的正则抠 JSON
+        model_kwargs={"response_format": {"type": "json_object"}},
     )
     prompt = (
         "以下文本节选自矿业技术报告(NI 43-101 / JORC)。"
@@ -102,10 +104,16 @@ def _llm_extract(text: str) -> tuple[dict, str]:
     )
     resp = llm.invoke(prompt)
     content = str(resp.content).strip()
-    m = re.search(r"\{.*\}", content, re.S)
-    if not m:
-        raise ValueError(f"LLM 未返回 JSON: {content[:100]}")
-    data = json.loads(m.group(0))
+    # 优先直接解析;供应商不支持 JSON 模式时回退到正则提取(兼容层)
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError:
+        m = re.search(r"\{.*\}", content, re.S)
+        if not m:
+            raise ValueError(f"LLM 未返回 JSON: {content[:100]}")
+        data = json.loads(m.group(0))
+    if not isinstance(data, dict):
+        raise ValueError(f"LLM 返回非对象: {content[:100]}")
     confidence = "medium" if data else "none"
     return data, confidence
 

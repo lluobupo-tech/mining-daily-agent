@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from agent.bridge import McpToolset
 from agent.prompts import SYSTEM_PROMPT
-from agent.render import collect_refs, save_briefing
+from agent.render import collect_refs, save_briefing, source_health
 from agent.template_agent import run as run_template
 from shared.config import (
     AGENT_MODE,
@@ -27,6 +27,17 @@ from shared.config import (
     DEEPSEEK_MODEL,
     MCP_TRANSPORT,
 )
+
+# 简报类查询必须包含的章节(普通问答不要求四段结构)
+_REQUIRED_SECTIONS = ("今日要闻", "储量", "价格", "风险")
+
+
+def _validate_briefing(query: str, body: str) -> list[str]:
+    """简报类查询校验四段结构,返回缺失的章节列表。"""
+    if "简报" not in query:
+        return []
+    return [s for s in _REQUIRED_SECTIONS if s not in body]
+
 
 MENU = [
     "给我生成一份关于 Pilbara 锂矿的今日简报",
@@ -85,13 +96,31 @@ async def _run(query: str, mode: str) -> tuple[str, str]:
                     raise ValueError("LLM 输出为空")
                 if "#" not in body:
                     raise ValueError("LLM 输出不含 Markdown 标题,未按简报格式输出")
+                missing = _validate_briefing(query, body)
+                if missing:
+                    print(f"[提示] 简报缺少章节 {missing},带提示重试一次")
+                    body = await _run_llm(
+                        f"{query}\n\n(上次输出缺少章节:{'、'.join(missing)}。"
+                        "必须完整包含 ①今日要闻摘要 ②储量数据 ③价格走势 ④风险提示 四个章节,重新输出)",
+                        toolset,
+                    )
+                    missing = _validate_briefing(query, body)
+                    if missing:
+                        raise ValueError(f"LLM 两次输出均缺少章节: {missing}")
             finally:
                 await toolset.close()
             refs = collect_refs(toolset.call_log)
             # 只保留 LLM 在简报正文中实际引用的链接(避免把搜索中间结果全列进来)
             cited = [u for u in refs if u in body]
             refs = cited if cited else refs
-            path = save_briefing(query, body, refs, "llm")
+            # 数据源降级不得静默:显式警告 + 页脚健康度统计
+            degraded = [
+                e for e in toolset.call_log
+                if (e.get("data") or {}).get("source") not in ("real", None)
+            ]
+            if degraded:
+                print(f"[警告] 本次 {len(degraded)} 次工具调用数据源降级,正文已按规则标注")
+            path = save_briefing(query, body, refs, "llm", meta=source_health(toolset.call_log))
             return path, "llm"
         except Exception as e:  # noqa: BLE001
             print(f"[降级] LLM 模式失败({type(e).__name__}: {str(e)[:150]}),自动切换模板模式")
@@ -99,7 +128,7 @@ async def _run(query: str, mode: str) -> tuple[str, str]:
 
     body, _, call_log = run_template(query)
     refs = collect_refs(call_log)
-    path = save_briefing(query, body, refs, "template")
+    path = save_briefing(query, body, refs, "template", meta=source_health(call_log))
     return path, "template"
 
 

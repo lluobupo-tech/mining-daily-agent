@@ -8,6 +8,35 @@
 
 > 快速开始见 [RUN.md](RUN.md);示例简报见 [output/example/示例简报.md](output/example/示例简报.md)。
 
+## ⚙️ 配置(必读)
+
+**LLM 模式需要您自己申请 API Key,项目不内置任何 key。** 不配置也能运行(自动走模板模式),
+新闻/价格/矿权仍为真实数据,但简报由固定模板拼装,没有 LLM 的分析与生成能力。
+
+1. **获取 Key**:[platform.deepseek.com](https://platform.deepseek.com) 注册创建(新用户有免费额度)。
+   任何 OpenAI 兼容服务均可(Qwen / GLM / Kimi / Moonshot…),改 `DEEPSEEK_BASE_URL` / `DEEPSEEK_MODEL` 即可切换。
+2. **配置**:复制 `.env.example` 为 `.env`,填入 `DEEPSEEK_API_KEY=sk-你的key`(`.env` 已 gitignore,不会外泄)。
+3. **验证**:运行
+   `uv run python -m agent.main --query "给我生成一份关于 Pilbara 锂矿的今日简报"`,
+   输出页脚显示 **"模式: llm"** 即生效;显示 "template" 说明未配置成功。
+
+### 全部可配置项
+
+| 变量 | 作用 | 默认值 | 何时需要改 |
+|---|---|---|---|
+| `DEEPSEEK_API_KEY` | LLM API Key(留空 = 模板模式) | 空 | **必须自配,否则无 LLM 模式** |
+| `DEEPSEEK_BASE_URL` | OpenAI 兼容 API 地址 | https://api.deepseek.com | 换其他 LLM 供应商时 |
+| `DEEPSEEK_MODEL` | 模型名 | deepseek-chat | 换模型时 |
+| `AGENT_MODE` | auto / llm / template | auto | 一般不用改 |
+| `MCP_SERVER_TRANSPORT` | stdio / http | stdio | 一般不用改(docker 内自动 http) |
+| `MCP_SERVER_PORT` | HTTP 模式端口(server 侧) | 8101~8104 | 端口冲突时 |
+| `MCP_HTTP_URLS` | HTTP 模式 server 地址列表(agent 侧) | 空 | 连接独立部署的 server 时 |
+
+### 网络环境要求
+
+- 中文新闻(东方财富)、行情(新浪 / westmetall)、矿权公示(ky.mnr.gov.cn):国内直连,无需代理
+- 英文新闻 RSS(northernminer / im-mining):需能访问国际站点;不可用时自动跳过,不影响其余板块
+
 ## 架构
 
 ```

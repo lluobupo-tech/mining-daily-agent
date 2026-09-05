@@ -41,6 +41,25 @@ def collect_refs(call_log: list[dict]) -> list[str]:
     return urls[:30]
 
 
+def source_health(call_log: list[dict]) -> str:
+    """统计每次工具调用的数据源成色,生成页脚健康度摘要(如 "mining-news-mcp 3/4 真实")。
+
+    让降级可见:用户一眼看出本次简报哪些板块是真实数据、哪些是兜底数据。
+    """
+    per_server: dict[str, list[str]] = {}
+    for entry in call_log:
+        data = entry.get("data") or {}
+        if not isinstance(data, dict):
+            continue
+        src = data.get("source", "?")
+        per_server.setdefault(entry.get("server", "?"), []).append(src)
+    parts = []
+    for srv, srcs in per_server.items():
+        real = sum(1 for s in srcs if s == "real")
+        parts.append(f"{srv} {real}/{len(srcs)} 真实")
+    return "数据源:" + ",".join(parts)
+
+
 def strip_preamble(body: str) -> str:
     """去掉 LLM 在正式简报前输出的思考过程(以第一个 # 标题为简报起点)。"""
     lines = body.splitlines()

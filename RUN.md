@@ -22,11 +22,17 @@ uv sync
 #    没有 uv 则用 pip:
 #    pip install -r requirements.txt
 
-# 3. (可选,启用 LLM 模式需要)配置 DeepSeek API Key:
+# 3. 配置 LLM API Key(重要:项目不内置任何 key,想要 LLM 智能简报必须自配):
 #    Windows:  copy .env.example .env
 #    macOS/Linux:  cp .env.example .env
 #    然后用编辑器打开 .env,把 DEEPSEEK_API_KEY=sk-xxx 改成你自己的 key
-#    (不配 key 也能用:自动走模板模式,简报功能完整;key 获取: platform.deepseek.com)
+#    key 获取: platform.deepseek.com 注册创建(新用户有免费额度)
+#
+#    ⚠️ 不配置会怎样?自动降级为"模板模式":新闻/价格/矿权仍是真实数据,
+#       但简报由固定模板拼装,没有 LLM 的分析能力(页脚会显示"模式: template")
+#
+#    其他可配置项(.env 内):DEEPSEEK_BASE_URL / DEEPSEEK_MODEL(换任何 OpenAI 兼容服务)、
+#    AGENT_MODE(auto/llm/template)。完整清单见 README「⚙️ 配置(必读)」
 
 # 4. 运行 Agent(交互菜单:回车即生成 Pilbara 锂矿简报)
 uv run python -m agent.main

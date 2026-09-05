@@ -247,6 +247,86 @@ def test_template_demo_news_heading_marked(monkeypatch):
     assert "今日要闻摘要(⚠️示例数据" in body
 
 
+# ---------- 数据源解析 fixture 用例(monkeypatch HTTP,零网络) ----------
+
+def _jsonp(payload: dict) -> str:
+    import json as _json
+
+    return "x(" + _json.dumps(payload, ensure_ascii=False) + ")"
+
+
+def test_eastmoney_time_sort_and_date_filter(monkeypatch):
+    """东方财富:必须按时间排序;超过 days 窗口的旧闻必须被过滤。"""
+    from shared.sources import eastmoney_news
+
+    captured = {}
+
+    def fake_get_text(url, *, timeout=None, headers=None, params=None, retries=1):
+        import json as _json
+
+        p = _json.loads(params["param"])
+        captured["sort"] = p["param"]["cmsArticleWebOld"]["sort"]
+        return _jsonp(
+            {
+                "hitsTotal": 2,
+                "result": {"cmsArticleWebOld": [
+                    {"date": "2026-08-01 10:00:00", "title": "<b>旧闻</b>", "content": "旧",
+                     "mediaName": "m", "url": "https://e.com/old"},
+                    {"date": "2026-09-04 10:00:00", "title": "新闻", "content": "新",
+                     "mediaName": "m", "url": "https://e.com/new"},
+                ]},
+            }
+        )
+
+    monkeypatch.setattr(eastmoney_news, "get_text", fake_get_text)
+    monkeypatch.setattr(eastmoney_news, "kv_get", lambda *a, **k: None)
+    monkeypatch.setattr(eastmoney_news, "kv_set", lambda *a, **k: None)
+
+    r = eastmoney_news.search("锂矿", days=7, limit=5)
+    assert captured["sort"] == "time"
+    assert [it["url"] for it in r["items"]] == ["https://e.com/new"]
+
+
+def test_rss_feed_item_parsing(monkeypatch):
+    """RSS:XML 字段解析(标题/链接/摘要/日期归一化)。"""
+    from shared.sources import rss_news
+
+    xml = """<?xml version="1.0"?><rss><channel><item>
+    <title>Pilbara Minerals lithium update</title>
+    <link>https://feed.example/1</link>
+    <description><![CDATA[<p>summary</p>]]></description>
+    <pubDate>Thu, 03 Sep 2026 10:00:00 GMT</pubDate>
+    </item></channel></rss>"""
+    monkeypatch.setattr(rss_news, "get_text", lambda url, timeout=8.0: xml)
+    monkeypatch.setattr(rss_news, "kv_get", lambda *a, **k: None)
+    monkeypatch.setattr(rss_news, "kv_set", lambda *a, **k: None)
+
+    items = rss_news._feed_items("northernminer", "https://feed.example")
+    assert items[0]["title"].startswith("Pilbara")
+    assert items[0]["published"] == "2026-09-03"
+    assert items[0]["summary"] == "summary"
+    assert items[0]["url"] == "https://feed.example/1"
+
+
+def test_sina_quote_parses_domestic_gbk(monkeypatch):
+    """新浪国内行情:GBK 响应解析(最新价字段 8/名称/日期)。"""
+    from shared.sources import sina_quote
+
+    payload = (
+        'var hq_str_nf_CU0="铜连续,150000,151000,149000,152000,148000,0,0,109290,'
+        '0,0,0,0,0,0,0,0,2026-09-05,15:00:00,0,0,0,0";\n'
+    )
+    monkeypatch.setattr(
+        sina_quote, "get_bytes", lambda url, headers=None, timeout=8.0: payload.encode("gbk")
+    )
+
+    q = sina_quote.quote("copper", "domestic")
+    assert q["source"] == "real"
+    assert q["price"] == 109290.0
+    assert q["name"] == "铜连续"
+    assert q["date"] == "2026-09-05"
+
+
 # ---------- 网络类用例(容忍降级,断言结构) ----------
 
 def test_news_search_structure():
