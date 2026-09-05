@@ -9,6 +9,7 @@
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -24,6 +25,14 @@ from shared.sources import eastmoney_news, rss_news
 from shared.sources.simulate import load_sample
 
 mcp = FastMCP("mining-news-mcp")
+
+
+# 纯英文查询 → 中文源补查关键词(覆盖本项目主题矿种;LLM 只用英文查询时也能命中中文源)
+_ZH_FALLBACK_TERMS = {
+    "pilbara": "Pilbara 锂矿", "pilgangoora": "Pilbara 锂矿", "wodgina": "锂矿",
+    "lithium": "锂矿", "spodumene": "锂精矿",
+    "copper": "铜矿", "nickel": "镍矿", "zinc": "锌矿", "aluminum": "铝矿", "aluminium": "铝矿",
+}
 
 
 def _merge(primary: list[dict], secondary: list[dict], limit: int) -> list[dict]:
@@ -57,11 +66,24 @@ def search(query: str, days: int = 7, limit: int = 10) -> dict:
     zh_items: list[dict] = []
     errors: list[str] = []
 
-    try:
-        r = eastmoney_news.search(query, days=days, limit=limit)
-        zh_items = r["items"]
-    except Exception as e:  # noqa: BLE001
-        errors.append(f"东方财富: {e}")
+    # 中文源检索:纯英文查询命中率低,自动补一条中文主题词查询(东方财富对中文覆盖远好于英文词组)
+    zh_queries = [query]
+    if not re.search(r"[一-鿿]", query):
+        for token, zh in _ZH_FALLBACK_TERMS.items():
+            if token in query.lower():
+                zh_queries.append(zh)
+                break
+    for q in zh_queries:
+        try:
+            r = eastmoney_news.search(q, days=days, limit=limit)
+            zh_items = _merge(zh_items, r["items"], limit)
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"东方财富: {e}")
+            # 实时请求失败时回退上次成功搜索的缓存(旧数据优于示例数据)
+            cached = eastmoney_news.cached_search(q, limit)
+            if cached:
+                zh_items = _merge(zh_items, cached.get("items", []), limit)
+                errors.append("已回退东方财富缓存(可能稍旧)")
 
     try:
         r2 = rss_news.search(query, days=days, limit=limit)
@@ -71,12 +93,15 @@ def search(query: str, days: int = 7, limit: int = 10) -> dict:
         items = zh_items[:limit]
 
     if items:
-        return {
+        result = {
             "items": items,
             "total": len(items),
             "source": "real",
             "data_ts": datetime.now().isoformat(timespec="seconds"),
         }
+        if errors:
+            result["note"] = f"部分数据源异常({'; '.join(errors[:2])}),已用缓存/其余源兜底"
+        return result
 
     # 全部真实源失败 → 内置样例兜底(明确标注 demo)
     try:
@@ -85,12 +110,13 @@ def search(query: str, days: int = 7, limit: int = 10) -> dict:
         filtered = [
             x for x in sample if kw and kw in f"{x['title']} {x['summary']}".lower()
         ] or sample
+        reason = f"真实源异常({'; '.join(errors[:2])})" if errors else "真实源可用,但未检索到与查询匹配的新闻"
         return {
             "items": filtered[:limit],
             "total": len(filtered),
             "source": "demo",
             "data_ts": datetime.now().isoformat(timespec="seconds"),
-            "note": f"真实源均不可用({'; '.join(errors) or '网络异常'}),返回内置样例数据",
+            "note": f"{reason},返回内置样例数据",
         }
     except Exception as e:  # noqa: BLE001
         return {

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 矿权日报 Agent(Mining Daily Agent)
 
 

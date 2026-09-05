@@ -97,6 +97,7 @@ def get_price(commodity: str, date: str = "") -> dict:
                     "date": p["date"],
                     "is_trading_day": p["is_trading_day"],
                     "source": "real",
+                    "source_url": sina_kline.URL.format(code=sina_kline.KLINE_CODES[key]),
                     "data_ts": datetime.now().isoformat(timespec="seconds"),
                     "note": "" if p["is_trading_day"] else f"{target} 非交易日,回退最近交易日 {p['date']}",
                 }
@@ -123,6 +124,7 @@ def get_price(commodity: str, date: str = "") -> dict:
                         "unit": "USD/t",
                         "date": w["date"],
                         "source": "real",
+                        "source_url": westmetall.URL,
                         "data_ts": datetime.now().isoformat(timespec="seconds"),
                         "note": "LME 官方结算价(westmetall 转载)",
                     }
@@ -143,6 +145,7 @@ def get_price(commodity: str, date: str = "") -> dict:
                         "unit": "USD/t",
                         "date": matched["date"],
                         "source": "real",
+                        "source_url": westmetall.URL,
                         "data_ts": datetime.now().isoformat(timespec="seconds"),
                         "note": "LME 官方结算价(westmetall 快照)",
                     }
@@ -190,6 +193,7 @@ def get_trend(commodity: str, days: int = 30) -> dict:
                 "unit": "CNY/t",
                 "points": [{"date": b["date"], "price": b["close"]} for b in pts],
                 "source": "real",
+                "source_url": sina_kline.URL.format(code=sina_kline.KLINE_CODES[key]),
                 "data_ts": datetime.now().isoformat(timespec="seconds"),
             }
         except Exception as e:  # noqa: BLE001
@@ -207,6 +211,7 @@ def get_trend(commodity: str, days: int = 30) -> dict:
                     "unit": "USD/t",
                     "points": [{"date": s["date"], "price": s["price"]} for s in hist][-days:],
                     "source": "real",
+                    "source_url": westmetall.URL,
                     "data_ts": datetime.now().isoformat(timespec="seconds"),
                     "note": "LME 官方结算价每日快照累积(免费源无 LME 历史 K 线,首次运行点数较少)",
                 }

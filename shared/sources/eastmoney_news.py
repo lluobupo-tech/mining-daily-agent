@@ -28,7 +28,8 @@ def _build_param(keyword: str, page_size: int) -> dict:
         "param": {
             "cmsArticleWebOld": {
                 "searchScope": "default",
-                "sort": "default",
+                # 必须按时间排序:default 为相关性排序,近 N 天新闻排在首页之外,会被日期窗口全滤掉
+                "sort": "time",
                 "pageIndex": 1,
                 "pageSize": page_size,
                 "preTag": "",
@@ -36,6 +37,14 @@ def _build_param(keyword: str, page_size: int) -> dict:
             }
         },
     }
+
+
+def cached_search(keyword: str, limit: int) -> dict | None:
+    """读取最近一次成功搜索的缓存(忽略 TTL)。
+
+    供新闻 MCP 在实时请求失败时兜底:旧数据优于示例数据。
+    """
+    return kv_get(f"em_news:{keyword}:{limit}")
 
 
 def _clean(html: str) -> str:

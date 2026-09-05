@@ -53,6 +53,17 @@ def _feed_items(name: str, url: str) -> list[dict]:
     return items
 
 
+def _matches(terms: list[str], hay: str) -> bool:
+    """相关性判定:短查询(≤4 词)要求全部词命中,长查询要求命中过半。
+
+    避免 "lithium" 等宽泛单词单独命中即收录泛新闻,造成主题无关结果
+    (例如查询 "Pilbara Minerals lithium" 时不应返回美国锂矿泛新闻)。
+    """
+    n = len(terms)
+    need = n if n <= 4 else (n + 1) // 2
+    return sum(1 for t in terms if t.lower() in hay) >= need
+
+
 def search(query: str, days: int = 7, limit: int = 10) -> dict:
     """英文 RSS 关键词过滤。查询不含英文词时返回空(英文源无法覆盖中文查询)。"""
     terms = re.findall(r"[A-Za-z0-9]+", query)
@@ -65,7 +76,7 @@ def search(query: str, days: int = 7, limit: int = 10) -> dict:
         try:
             for it in _feed_items(name, url):
                 hay = f"{it['title']} {it['summary']}".lower()
-                if not any(t.lower() in hay for t in terms):
+                if not _matches(terms, hay):
                     continue
                 pub = _parse_date(it["published"])
                 if days > 0 and pub is not None and pub < cutoff:
@@ -75,4 +86,13 @@ def search(query: str, days: int = 7, limit: int = 10) -> dict:
             continue
 
     items.sort(key=lambda x: x.get("published", ""), reverse=True)
-    return {"items": items[:limit], "total": len(items), "source": "real", "data_ts": datetime.now().isoformat(timespec="seconds")}
+    # 多 feed 可能命中同一篇文章,按 url 去重
+    seen: set[str] = set()
+    unique: list[dict] = []
+    for it in items:
+        if it.get("url") and it["url"] in seen:
+            continue
+        if it.get("url"):
+            seen.add(it["url"])
+        unique.append(it)
+    return {"items": unique[:limit], "total": len(unique), "source": "real", "data_ts": datetime.now().isoformat(timespec="seconds")}

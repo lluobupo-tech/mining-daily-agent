@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from urllib.parse import urlsplit
 
 from shared.config import OUTPUT_DIR
 
@@ -9,25 +10,35 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def collect_refs(call_log: list[dict]) -> list[str]:
-    """从工具调用记录中提取引用源链接(新闻链接/公告链接/报告来源),去重保序。"""
+    """从工具调用记录中提取引用源链接(新闻链接/公告链接/报告来源),去重保序。
+
+    只保留真实来源的链接:source=demo/simulated 的结果(内置样例、模拟数据)
+    以及 example.com 等占位链接一律剔除,避免污染引用源清单。
+    """
     urls: list[str] = []
     seen: set[str] = set()
 
     def add(url: str):
-        if url and url.startswith("http") and url not in seen:
-            seen.add(url)
-            urls.append(url)
+        if not url or not url.startswith("http") or url in seen:
+            return
+        host = urlsplit(url).netloc.lower()
+        if host in ("example.com", "example.org", "example.net") or host.endswith(".example.com"):
+            return
+        seen.add(url)
+        urls.append(url)
 
     for entry in call_log:
         data = entry.get("data")
         if not isinstance(data, dict):
+            continue
+        if data.get("source") in ("demo", "simulated"):
             continue
         if isinstance(data.get("items"), list):
             for it in data["items"]:
                 if isinstance(it, dict):
                     add(it.get("url", ""))
         add(data.get("source_url", ""))
-    return urls
+    return urls[:30]
 
 
 def strip_preamble(body: str) -> str:

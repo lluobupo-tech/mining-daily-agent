@@ -86,6 +86,7 @@ def fetch() -> dict:
         "prices": prices,
         "stocks": stocks,
         "source": "real",
+        "source_url": URL,
         "data_ts": datetime.now().isoformat(timespec="seconds"),
     }
     if prices:

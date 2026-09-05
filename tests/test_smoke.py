@@ -133,6 +133,120 @@ class _FakeLLM:
         return AIMessage(content="ok")
 
 
+# ---------- 缺陷回归用例(全 mock,快速确定) ----------
+
+def test_refs_exclude_demo_and_placeholder_urls():
+    """引用源只保留真实来源链接,剔除 demo/simulated 与 example.com 占位链接。"""
+    from agent.render import collect_refs
+
+    log = [
+        {"server": "x", "tool": "y", "data": {
+            "source": "real",
+            "items": [
+                {"url": "https://im-mining.com/2026/09/04/real-article/"},
+                {"url": "https://example.com/news/fake"},
+            ],
+        }},
+        {"server": "x", "tool": "y", "data": {
+            "source": "demo", "items": [{"url": "https://example.com/news/demo-item"}],
+        }},
+        {"server": "x", "tool": "y", "data": {
+            "source": "simulated", "source_url": "https://example.org/sim",
+        }},
+        {"server": "x", "tool": "y", "data": {
+            "source": "real",
+            "source_url": "https://pilbaraminerals.com.au/investors/annual-reports/",
+        }},
+    ]
+    refs = collect_refs(log)
+    assert refs == [
+        "https://im-mining.com/2026/09/04/real-article/",
+        "https://pilbaraminerals.com.au/investors/annual-reports/",
+    ]
+
+
+def test_rss_requires_all_query_terms(monkeypatch):
+    """RSS 过滤要求查询词全部命中,防止宽泛单词命中泛新闻。"""
+    from shared.sources import rss_news
+
+    fake = [
+        {
+            "title": "New US lithium mines are coming",
+            "summary": "",
+            "published": "2026-09-04",
+            "media": "northernminer",
+            "url": "https://a.com/irrelevant",
+        },
+        {
+            "title": "Pilbara Minerals updates Pilgangoora spodumene guidance",
+            "summary": "",
+            "published": "2026-09-03",
+            "media": "northernminer",
+            "url": "https://a.com/relevant",
+        },
+    ]
+    monkeypatch.setattr(rss_news, "_feed_items", lambda name, url: fake)
+    r = rss_news.search("Pilbara Minerals Pilgangoora spodumene", days=7, limit=10)
+    assert [x["url"] for x in r["items"]] == ["https://a.com/relevant"]
+
+
+def test_news_stale_cache_fallback_on_source_failure(monkeypatch):
+    """东方财富实时请求失败时回退上次成功搜索的缓存。"""
+    from servers import news_server
+
+    cached = {
+        "items": [
+            {
+                "title": "缓存新闻",
+                "summary": "",
+                "media": "东方财富",
+                "url": "https://finance.eastmoney.com/a/1.html",
+                "published": "2026-09-04",
+            }
+        ],
+        "total": 1,
+        "source": "real",
+    }
+
+    def boom(*a, **k):
+        raise ConnectionError("网络异常")
+
+    def empty_rss(*a, **k):
+        return {"items": [], "total": 0, "source": "real", "data_ts": "t"}
+
+    monkeypatch.setattr(news_server.eastmoney_news, "search", boom)
+    monkeypatch.setattr(news_server.eastmoney_news, "cached_search", lambda q, limit: cached)
+    monkeypatch.setattr(news_server.rss_news, "search", empty_rss)
+
+    r = news_server.search("Pilbara", days=7, limit=5)
+    assert r["source"] == "real"
+    assert r["items"][0]["url"] == "https://finance.eastmoney.com/a/1.html"
+    assert "缓存" in r.get("note", "")
+
+
+def test_template_demo_news_heading_marked(monkeypatch):
+    """模板模式:新闻降级 demo 时,标题必须注明非当日真实新闻。"""
+    from agent import template_agent
+    from servers import news_server, pdf_server, price_server, rights_server
+
+    demo = {
+        "items": [{"title": "t", "media": "m", "published": "2026-09-02", "url": "https://example.com/x"}],
+        "total": 1,
+        "source": "demo",
+        "note": "真实源不可用",
+        "data_ts": "t",
+    }
+    monkeypatch.setattr(news_server, "search", lambda *a, **k: demo)
+    monkeypatch.setattr(price_server, "get_price", lambda *a, **k: {"error": "mock"})
+    monkeypatch.setattr(price_server, "get_trend", lambda *a, **k: {"points": [], "note": "mock"})
+    monkeypatch.setattr(pdf_server, "extract_resources", lambda *a, **k: {"note": "mock"})
+    monkeypatch.setattr(rights_server, "search_mining_rights", lambda *a, **k: {"items": []})
+
+    body, mode, call_log = template_agent.run("给我生成一份关于 Pilbara 锂矿的今日简报")
+    assert mode == "template"
+    assert "今日要闻摘要(⚠️示例数据" in body
+
+
 # ---------- 网络类用例(容忍降级,断言结构) ----------
 
 def test_news_search_structure():

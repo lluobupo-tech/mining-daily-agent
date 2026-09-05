@@ -16,11 +16,11 @@ from shared.http_client import get_text
 BASE = "https://ky.mnr.gov.cn"
 
 # 频道 → 路径(出让公告/出让结果/转让公示)
+# 注:原"采矿权出让结果"频道 /jggs/cjgs/ 已 404(网站改版下线),由其余频道覆盖
 CHANNELS = {
     "探矿权出让公告": "/kyqcrgg/tkq/",
     "采矿权出让公告": "/kyqcrgg/ckq/",
     "探矿权出让结果": "/jggs/jjgs/",
-    "采矿权出让结果": "/jggs/cjgs/",
 }
 
 CACHE_TTL = 3600  # 公告列表缓存 1 小时
@@ -49,8 +49,12 @@ def _channel_items(path: str) -> list[dict]:
 
 
 def search(keyword: str, days: int = 30, limit: int = 10) -> dict:
-    """跨频道抓取并按关键词/时间过滤。单频道失败不影响其余。"""
+    """跨频道抓取并按关键词/时间过滤。单频道失败不影响其余;全部失败时带 error 字段。
+
+    与"官方源可用但无匹配公告"区分开,供上层决定降级策略。
+    """
     items = []
+    failed = 0
     for ch, path in CHANNELS.items():
         try:
             for it in _channel_items(path):
@@ -60,14 +64,21 @@ def search(keyword: str, days: int = 30, limit: int = 10) -> dict:
                     continue
                 items.append({**it, "channel": ch})
         except Exception:
+            failed += 1
             continue
     items.sort(key=lambda x: x.get("date", ""), reverse=True)
-    return {
-        "items": items[:limit],
-        "total": len(items),
+    # 跨频道按 url 去重(部分公告会同时在出让/结果频道出现)
+    seen: set[str] = set()
+    unique = [it for it in items if not (it["url"] in seen or seen.add(it["url"]))]
+    result = {
+        "items": unique[:limit],
+        "total": len(unique),
         "source": "real",
         "data_ts": datetime.now().isoformat(timespec="seconds"),
     }
+    if failed and failed == len(CHANNELS):
+        result["error"] = "全部频道抓取失败"
+    return result
 
 
 def _months_ago(days: int) -> str:

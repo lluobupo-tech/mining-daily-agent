@@ -111,5 +111,6 @@ def quote(commodity: str, market: str = "domestic") -> dict:
         "unit": "CNY/t" if market == "domestic" else "USD/t",
         "date": _find_date(fields),
         "source": "real",
+        "source_url": f"https://hq.sinajs.cn/list={code}",
         "data_ts": datetime.now().isoformat(timespec="seconds"),
     }

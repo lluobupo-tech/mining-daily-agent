@@ -83,6 +83,8 @@ async def _run(query: str, mode: str) -> tuple[str, str]:
                 body = await _run_llm(query, toolset)
                 if not body.strip():
                     raise ValueError("LLM 输出为空")
+                if "#" not in body:
+                    raise ValueError("LLM 输出不含 Markdown 标题,未按简报格式输出")
             finally:
                 await toolset.close()
             refs = collect_refs(toolset.call_log)

@@ -55,11 +55,17 @@ def run(query: str) -> tuple[str, str, list[dict]]:
     ]
 
     tag = lambda s: "⚠️示例" if s == "demo" else ("⚠️模拟" if s == "simulated" else "✅真实")  # noqa: E731
+    news_src = news.get("source", "")
+    news_heading = (
+        "## ① 今日要闻摘要(⚠️示例数据,非当日真实新闻)"
+        if news_src == "demo"
+        else "## ① 今日要闻摘要"
+    )
     lines = [
         f"# 矿权日报简报(模板模式)",
         f"> 查询:{query}",
         "",
-        "## ① 今日要闻摘要",
+        news_heading,
     ]
     if news.get("items"):
         for it in news["items"]:
@@ -71,7 +77,8 @@ def run(query: str) -> tuple[str, str, list[dict]]:
                 f"- **{it['title']}**({media},{pub})[{tag(news.get('source'))}]{link}"
             )
     else:
-        lines.append(f"- 暂无新闻 {news.get('error', '') or news.get('note', '')}")
+        reason = "(真实源可用,但未检索到相关新闻)" if news_src == "real" else ""
+        lines.append(f"- 今日未检索到相关新闻 {reason}{news.get('error', '') or news.get('note', '')}")
     if news.get("note"):
         lines.append(f"> {news['note']}")
 

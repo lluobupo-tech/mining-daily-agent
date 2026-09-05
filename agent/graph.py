@@ -6,6 +6,7 @@ tools 节点手写实现(不用 ToolNode):异步调用 MCP 工具,支持并行 t
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Annotated, TypedDict
 
@@ -30,8 +31,8 @@ def build_agent(llm, tools: list):
 
     async def tools_node(state: AgentState) -> dict:
         last = state["messages"][-1]
-        out_msgs: list[ToolMessage] = []
-        for tc in last.tool_calls:
+
+        async def run_one(tc: dict) -> ToolMessage:
             name = tc.get("name", "")
             args = tc.get("args", {})
             if isinstance(args, str):
@@ -47,10 +48,11 @@ def build_agent(llm, tools: list):
                     content = await tool.ainvoke(args)
                 except Exception as e:  # noqa: BLE001
                     content = json.dumps({"error": f"{name} 执行失败: {e}"}, ensure_ascii=False)
-            out_msgs.append(
-                ToolMessage(content=str(content), tool_call_id=tc["id"], name=name)
-            )
-        return {"messages": out_msgs, "round": state["round"] + 1}
+            return ToolMessage(content=str(content), tool_call_id=tc["id"], name=name)
+
+        # 同一轮多个 tool_calls 并行执行(asyncio.gather),单个失败不影响其余调用
+        out_msgs = await asyncio.gather(*(run_one(tc) for tc in last.tool_calls))
+        return {"messages": list(out_msgs), "round": state["round"] + 1}
 
     def route(state: AgentState) -> str:
         last = state["messages"][-1]
